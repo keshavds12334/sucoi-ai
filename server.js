@@ -18,12 +18,13 @@ const __dirname = path.dirname(__filename);
 const API_KEY = process.env.API_KEY;
 const MONGO_URI = process.env.MONGO_URI;
 
+// ✅ Connect to MongoDB
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.error("❌ MongoDB connection failed:", err));
 
-// Schemas
+// ======================== SCHEMAS ========================
 const goalSchema = new mongoose.Schema({
   username: String,
   day: String,
@@ -53,21 +54,17 @@ const Goal = mongoose.model("Goal", goalSchema);
 const Chat = mongoose.model("Chat", chatSchema);
 const User = mongoose.model("User", userSchema);
 
-// ✅ User signup endpoint
+// ======================== AUTH ENDPOINTS ========================
+
+// Signup
 app.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    console.log("📝 Signup attempt:", email);
-    
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists!" });
-    }
-    
+    if (existingUser) return res.status(400).json({ error: "User already exists!" });
+
     const newUser = new User({ name, email, password });
     await newUser.save();
-    console.log("✅ User created:", email);
-    
     res.json({ success: true, message: "User created successfully!" });
   } catch (err) {
     console.error("❌ Error signing up:", err);
@@ -75,19 +72,14 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// ✅ User signin endpoint
+// Signin
 app.post("/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("🔐 Signin attempt:", email);
-    
     const user = await User.findOne({ email, password });
-    
     if (user) {
-      console.log("✅ User signed in:", email);
       res.json({ success: true, user: { name: user.name, email: user.email } });
     } else {
-      console.log("❌ Invalid credentials for:", email);
       res.status(401).json({ error: "Invalid credentials!" });
     }
   } catch (err) {
@@ -96,11 +88,9 @@ app.post("/signin", async (req, res) => {
   }
 });
 
-// Chat endpoint
+// ======================== CHAT ENDPOINT ========================
 app.post("/chat", async (req, res) => {
   const { message: userMsg, username } = req.body;
-  console.log("📩 Received:", userMsg);
-
   if (!userMsg) return res.json({ reply: "Please type something first." });
 
   try {
@@ -141,7 +131,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// Goal endpoints
+// ======================== GOAL ENDPOINTS ========================
 app.post("/add-goal", async (req, res) => {
   try {
     const { username, goal } = req.body;
@@ -170,19 +160,13 @@ app.post("/add-goal", async (req, res) => {
 app.get("/get-goals/:username", async (req, res) => {
   try {
     const goals = await Goal.find({ username: req.params.username }).sort({ createdAt: 1 });
-    
-    const formattedGoals = goals.map(g => ({
+    const formattedGoals = goals.map((g) => ({
       _id: g._id,
       goal: JSON.stringify({
         day: g.day,
-        task: {
-          id: g.taskId,
-          text: g.taskText,
-          done: g.taskDone
-        }
-      })
+        task: { id: g.taskId, text: g.taskText, done: g.taskDone },
+      }),
     }));
-    
     res.json(formattedGoals);
   } catch (err) {
     console.error("❌ Error fetching goals:", err);
@@ -198,19 +182,12 @@ app.post("/update-goal", async (req, res) => {
 
     const result = await Goal.findOneAndUpdate(
       { username, taskId: task.id },
-      {
-        day,
-        taskText: task.text,
-        taskDone: task.done,
-      },
+      { day, taskText: task.text, taskDone: task.done },
       { new: true }
     );
 
-    if (result) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ error: "Goal not found" });
-    }
+    if (result) res.json({ success: true });
+    else res.status(404).json({ error: "Goal not found" });
   } catch (err) {
     console.error("❌ Error updating goal:", err);
     res.status(500).json({ error: "Failed to update goal" });
@@ -220,24 +197,16 @@ app.post("/update-goal", async (req, res) => {
 app.post("/delete-goal", async (req, res) => {
   try {
     const { username, taskId } = req.body;
-
-    const result = await Goal.findOneAndDelete({
-      username,
-      taskId,
-    });
-
-    if (result) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ error: "Goal not found" });
-    }
+    const result = await Goal.findOneAndDelete({ username, taskId });
+    if (result) res.json({ success: true });
+    else res.status(404).json({ error: "Goal not found" });
   } catch (err) {
     console.error("❌ Error deleting goal:", err);
     res.status(500).json({ error: "Failed to delete goal" });
   }
 });
 
-// Chat history endpoints
+// ======================== CHAT HISTORY ENDPOINTS ========================
 app.get("/get-chats/:username", async (req, res) => {
   try {
     const chats = await Chat.find({ username: req.params.username }).sort({ createdAt: 1 });
@@ -251,26 +220,24 @@ app.get("/get-chats/:username", async (req, res) => {
 app.post("/delete-chat", async (req, res) => {
   try {
     const { chatId } = req.body;
-    
     const result = await Chat.findByIdAndDelete(chatId);
-    
-    if (result) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ error: "Chat not found" });
-    }
+    if (result) res.json({ success: true });
+    else res.status(404).json({ error: "Chat not found" });
   } catch (err) {
     console.error("❌ Error deleting chat:", err);
     res.status(500).json({ error: "Failed to delete chat" });
   }
 });
 
+// ======================== FRONTEND SERVE ========================
 app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
   res.sendFile(path.resolve(__dirname, "dashboard.html"));
 });
 
-app.listen(3000, () =>
-  console.log("✅ Sucoi Bot running at http://localhost:3000")
-);
+// ✅ Use dynamic port for Render
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Sucoi Bot running on port ${PORT}`);
+});
