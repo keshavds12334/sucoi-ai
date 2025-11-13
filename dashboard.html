@@ -590,6 +590,11 @@
     </div>
 
     <script>
+        // ✅ Detect API URL based on environment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : window.location.origin;
+
         let currentUser = null;
         let users = [];
         let moods = [];
@@ -626,9 +631,9 @@
             console.log('🔄 Attempting signup with:', { name, email });
 
             try {
-                console.log('📡 Sending request to: http://localhost:3000/signup');
+                console.log('📡 Sending request to:', `${API_URL}/signup`);
                 
-                const res = await fetch('http://localhost:3000/signup', {
+                const res = await fetch(`${API_URL}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, password })
@@ -662,7 +667,7 @@
             }
 
             try {
-                const res = await fetch('http://localhost:3000/signin', {
+                const res = await fetch(`${API_URL}/signin`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -741,7 +746,7 @@
             container.scrollTop = container.scrollHeight;
 
             try {
-                const res = await fetch("http://localhost:3000/chat", {
+                const res = await fetch(`${API_URL}/chat`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message: msg, username: currentUser.username })
@@ -761,7 +766,7 @@
                 const msgs = container.querySelectorAll('div');
                 msgs[msgs.length - 1].remove();
                 container.innerHTML += `<div style="margin-bottom: 15px;">
-                    <div style="display: inline-block; background: #ffebee; color: #c62828; padding: 12px 20px; border-radius: 20px; max-width: 70%;">Server error. Make sure server is running on localhost:3000 💜</div>
+                    <div style="display: inline-block; background: #ffebee; color: #c62828; padding: 12px 20px; border-radius: 20px; max-width: 70%;">Server error. Please try again 💜</div>
                 </div>`;
                 container.scrollTop = container.scrollHeight;
             }
@@ -770,7 +775,7 @@
         async function loadChatHistory() {
             if (!currentUser) return;
             try {
-                const res = await fetch(`http://localhost:3000/get-chats/${currentUser.username}`);
+                const res = await fetch(`${API_URL}/get-chats/${currentUser.username}`);
                 const chats = await res.json();
                 
                 const container = document.getElementById('chatMessages');
@@ -803,7 +808,7 @@
             if (!confirm('Are you sure you want to delete this chat?')) return;
             
             try {
-                await fetch('http://localhost:3000/delete-chat', {
+                await fetch(`${API_URL}/delete-chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chatId })
@@ -872,7 +877,7 @@
 
             // Save to database
             try {
-                await fetch('http://localhost:3000/add-goal', {
+                await fetch(`${API_URL}/add-goal`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -895,7 +900,7 @@
             console.log('🔄 Loading goals for user:', currentUser.username);
             
             try {
-                const res = await fetch(`http://localhost:3000/get-goals/${currentUser.username}`);
+                const res = await fetch(`${API_URL}/get-goals/${currentUser.username}`);
                 
                 console.log('Response status:', res.status);
                 
@@ -962,7 +967,7 @@
                 
                 // Save updated task to database
                 try {
-                    await fetch('http://localhost:3000/update-goal', {
+                    await fetch(`${API_URL}/update-goal`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -983,7 +988,7 @@
             
             // Delete from database
             try {
-                await fetch('http://localhost:3000/delete-goal', {
+                await fetch(`${API_URL}/delete-goal`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
