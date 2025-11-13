@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sucoi - Your Mental Health Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar.hidden {
+            display: none;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .nav-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 12px 25px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .nav-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .auth-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            margin: 0 auto 30px;
+            animation: pulse 2s infinite;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .form-content {
+            display: none;
+        }
+
+        .form-content.active {
+            display: block;
+        }
+
+        .success-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .success-popup.active {
+            display: flex;
+        }
+
+        .success-content {
+            background: white;
+            padding: 50px;
+            border-radius: 30px;
+            text-align: center;
+            animation: popIn 0.6s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: rotate 0.6s ease;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .success-title {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .success-text {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .content {
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .mood-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .mood-popup.active {
+            display: flex;
+        }
+
+        .mood-popup-content {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 500px;
+            animation: popIn 0.5s ease;
+        }
+
+        .mood-popup-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+        }
+
+        .mood-popup-title {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .mood-popup-message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .day-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .day-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .task-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .task-delete {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            width: auto;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar hidden" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-avatar">🌸</div>
+            <div>
+                <div class="nav-title">Sucoi</div>
+                <div style="color: #666; font-size: 14px;" id="navWelcome">Welcome!</div>
+            </div>
+        </div>
+        <div class="nav-menu">
+            <button class="nav-btn active" onclick="showPage('home')">🏠 Home</button>
+            <button class="nav-btn" onclick="showPage('chat')">💬 Chat</button>
+            <button class="nav-btn" onclick="showPage('mood')">🎭 Mood</button>
+            <button class="nav-btn" onclick="showPage('goals')">📋 Goals</button>
+            <button class="nav-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div id="authPage" class="page active">
+        <div class="auth-container">
+            <div class="auth-box">
+                <div class="auth-avatar">🌸</div>
+                <h1>Welcome to Sucoi</h1>
+                <p class="subtitle">Your friendly companion for mental wellness</p>
+                <div class="tabs">
+                    <div class="tab active" onclick="switchAuthTab('signup')">Sign Up</div>
+                    <div class="tab" onclick="switchAuthTab('signin')">Sign In</div>
+                </div>
+                <div id="signupForm" class="form-content active">
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" id="signupName" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email (will be your username)</label>
+                        <input type="email" id="signupEmail" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" placeholder="Create a password">
+                    </div>
+                    <button onclick="handleSignup()">Create Account ✨</button>
+                </div>
+                <div id="signinForm" class="form-content">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signinEmail" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signinPassword" placeholder="Enter your password">
+                    </div>
+                    <button onclick="handleSignin()">Sign In 🚀</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-popup" id="successPopup">
+        <div class="success-content">
+            <div class="success-icon">🎉</div>
+            <div class="success-title" id="successTitle">Welcome Aboard!</div>
+            <div class="success-text" id="successText">Let's start your wellness journey together!</div>
+            <button onclick="closeSuccessPopup()" style="width: auto; padding: 16px 40px;">Continue ✨</button>
+        </div>
+    </div>
+
+    <div id="homePage" class="page">
+        <div class="content">
+            <div class="card" style="text-align: center;">
+                <h2 id="homeWelcome" style="color: #667eea; font-size: 36px; margin-bottom: 10px;">Welcome! 🌸</h2>
+                <p style="color: #666; font-size: 18px;">Your personal mental wellness space</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div onclick="showPage('chat')" style="background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 20px; text-align: center; cursor: pointer; transition: transform 0.3s;">
+                    <div style="font-size: 60px; margin-bottom: 15px;">💬</div>
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 10px;">Chat with Sucoi</div>
+                    <div style="color: #666; font-size: 14px;">Talk about anything</div>
+                </div>
+                <div onclick="showPage('mood')" style="background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 20px; text-align: center; cursor: pointer; transition: transform 0.3s;">
+                    <div style="font-size: 60px; margin-bottom: 15px;">🎭</div>
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 10px;">Track Your Mood</div>
+                    <div style="color: #666; font-size: 14px;">How are you feeling?</div>
+                </div>
+                <div onclick="showPage('goals')" style="background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 20px; text-align: center; cursor: pointer; transition: transform 0.3s;">
+                    <div style="font-size: 60px; margin-bottom: 15px;">📋</div>
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 10px;">Weekly Goals</div>
+                    <div style="color: #666; font-size: 14px;">Grow your tree</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatPage" class="page">
+        <div class="content">
+            <button onclick="showPage('home')" style="margin-bottom: 20px; width: auto; padding: 12px 25px; background: white; color: #667eea; border: 2px solid #667eea;">← Back to Home</button>
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">💬 Chat with Sucoi</h2>
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 20px; min-height: 400px; margin-bottom: 20px; overflow-y: auto;" id="chatMessages">
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">🌸</div>
+                        <h3 style="color: #667eea;">Hi! I'm Sucoi</h3>
+                        <p style="color: #666;">I'm here for you! 💜</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChat()">
+                    <button onclick="sendChat()" style="width: auto; padding: 16px 30px;">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="moodPage" class="page">
+        <div class="content">
+            <button onclick="showPage('home')" style="margin-bottom: 20px; width: auto; padding: 12px 25px; background: white; color: #667eea; border: 2px solid #667eea;">← Back to Home</button>
+            <div class="card">
+                <h2 style="color: #667eea; text-align: center; margin-bottom: 40px;">🎭 How are you feeling?</h2>
+                <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 40px;">
+                    <div onclick="trackMood('happy', '😊', 'Happy')" style="cursor: pointer; text-align: center; padding: 30px; background: white; border: 3px solid #e0e0e0; border-radius: 20px; flex: 1; max-width: 150px; transition: all 0.3s;">
+                        <div style="font-size: 80px;">😊</div>
+                        <div style="font-weight: 600;">Happy</div>
+                    </div>
+                    <div onclick="trackMood('sad', '😢', 'Sad')" style="cursor: pointer; text-align: center; padding: 30px; background: white; border: 3px solid #e0e0e0; border-radius: 20px; flex: 1; max-width: 150px; transition: all 0.3s;">
+                        <div style="font-size: 80px;">😢</div>
+                        <div style="font-weight: 600;">Sad</div>
+                    </div>
+                    <div onclick="trackMood('neutral', '😐', 'Okay')" style="cursor: pointer; text-align: center; padding: 30px; background: white; border: 3px solid #e0e0e0; border-radius: 20px; flex: 1; max-width: 150px; transition: all 0.3s;">
+                        <div style="font-size: 80px;">😐</div>
+                        <div style="font-weight: 600;">Okay</div>
+                    </div>
+                </div>
+                <div id="moodHistory" style="background: #f8f9fa; padding: 25px; border-radius: 20px;">
+                    <h3 style="color: #667eea; text-align: center; margin-bottom: 20px;">📊 Recent Moods</h3>
+                    <p style="text-align: center; color: #999;">No moods tracked yet!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mood-popup" id="moodPopup">
+        <div class="mood-popup-content">
+            <div class="mood-popup-icon" id="moodPopupIcon">🎉</div>
+            <div class="mood-popup-title" id="moodPopupTitle">Amazing!</div>
+            <div class="mood-popup-message" id="moodPopupMessage">Keep spreading those good vibes!</div>
+            <button onclick="closeMoodPopup()">Continue ✨</button>
+        </div>
+    </div>
+
+    <div id="goalsPage" class="page">
+        <div class="content">
+            <button onclick="showPage('home')" style="margin-bottom: 20px; width: auto; padding: 12px 25px; background: white; color: #667eea; border: 2px solid #667eea;">← Back to Home</button>
+            <div style="display: grid; grid-template-columns: 1fr 400px; gap: 30px;">
+                <div class="card">
+                    <h2 style="color: #667eea; margin-bottom: 30px;">📋 Weekly Goals</h2>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="color: #666;">Progress</span>
+                            <span id="goalProgress" style="color: #667eea; font-weight: 600;">0%</span>
+                        </div>
+                        <div style="background: #e0e0e0; height: 25px; border-radius: 15px; overflow: hidden;">
+                            <div id="goalProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #56ab2f, #a8e063); transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+                    <div id="daysList"></div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div id="treeDisplay" style="font-size: 150px; transition: all 0.8s; filter: grayscale(0.7) brightness(0.7);">🌳</div>
+                    <h3 id="treeMessage" style="color: #667eea; margin: 20px 0;">Start adding tasks!</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 15px;">
+                            <div id="completedCount" style="font-size: 32px; color: #667eea; font-weight: 700;">0</div>
+                            <div style="color: #666; font-size: 14px;">Completed</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 15px;">
+                            <div id="totalCount" style="font-size: 32px; color: #667eea; font-weight: 700;">0</div>
+                            <div style="color: #666; font-size: 14px;">Total Tasks</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let users = [];
+        let moods = [];
+        let tasks = {Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []};
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const moodMessages = {
+            happy: {icon: '🎉', title: "That's Wonderful!", messages: ["I'm so happy you're feeling great! Keep spreading those positive vibes! 🌟", "Your happiness is contagious! Remember this feeling! 💫"]},
+            sad: {icon: '💜', title: "I'm Here For You", messages: ["It's okay to feel sad sometimes. I'm here to support you. Remember, tough times don't last forever. 🤗", "Your feelings are valid. Take it one step at a time, and know that brighter days are ahead. 💙"]},
+            neutral: {icon: '🌟', title: "That's Okay!", messages: ["Neutral days are part of life! Sometimes we just need to take things easy. You're doing fine! 💛", "Not every day has to be amazing, and that's perfectly okay! Be gentle with yourself. ☀️"]}
+        };
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-content').forEach(f => f.classList.remove('active'));
+            if (tab === 'signup') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('signupForm').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('signinForm').classList.add('active');
+            }
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+            
+            if (!name || !email || !password) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            console.log('🔄 Attempting signup with:', { name, email });
+
+            try {
+                console.log('📡 Sending request to: http://localhost:3000/signup');
+                
+                const res = await fetch('http://localhost:3000/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                console.log('📥 Response status:', res.status);
+                const data = await res.json();
+                console.log('📦 Response data:', data);
+
+                if (res.ok) {
+                    currentUser = { name, username: email, email };
+                    document.getElementById('successTitle').textContent = `Welcome ${name}! 🎊`;
+                    document.getElementById('successText').textContent = "Let's start your wellness journey together!";
+                    document.getElementById('successPopup').classList.add('active');
+                } else {
+                    alert(data.error || 'Signup failed!');
+                }
+            } catch (e) {
+                console.error('❌ Signup error:', e);
+                alert('Error connecting to server: ' + e.message + '\n\nPlease check:\n1. Server is running (node server.js)\n2. Server shows "✅ Sucoi Bot running at http://localhost:3000"');
+            }
+        }
+
+        async function handleSignin() {
+            const email = document.getElementById('signinEmail').value.trim();
+            const password = document.getElementById('signinPassword').value.trim();
+            
+            if (!email || !password) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:3000/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    currentUser = { name: data.user.name, username: data.user.email, email: data.user.email };
+                    document.getElementById('successTitle').textContent = `Welcome back, ${data.user.name}! 💜`;
+                    document.getElementById('successText').textContent = "Great to see you again!";
+                    document.getElementById('successPopup').classList.add('active');
+                } else {
+                    alert(data.error || 'Invalid credentials!');
+                }
+            } catch (e) {
+                console.error('Signin error:', e);
+                alert('Error connecting to server. Please make sure the server is running.');
+            }
+        }
+
+        async function closeSuccessPopup() {
+            document.getElementById('successPopup').classList.remove('active');
+            document.getElementById('authPage').classList.remove('active');
+            document.getElementById('homePage').classList.add('active');
+            document.getElementById('navbar').classList.remove('hidden');
+            document.getElementById('navWelcome').textContent = `Welcome, ${currentUser.name}! 💜`;
+            document.getElementById('homeWelcome').textContent = `Welcome, ${currentUser.name}! 🌸`;
+            initializeDays();
+            await loadGoals();
+            await loadChatHistory();
+        }
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const btnMap = {home: 0, chat: 1, mood: 2, goals: 3};
+            document.querySelectorAll('.nav-btn')[btnMap[page]].classList.add('active');
+            
+            const navbar = document.getElementById('navbar');
+            if (page === 'home') {
+                navbar.classList.remove('hidden');
+            } else {
+                navbar.classList.add('hidden');
+            }
+
+            if (page === 'goals') {
+                loadGoals();
+            } else if (page === 'chat') {
+                loadChatHistory();
+            }
+        }
+
+        function logout() {
+            document.getElementById('navbar').classList.add('hidden');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('authPage').classList.add('active');
+            currentUser = null;
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+
+            const container = document.getElementById('chatMessages');
+            if (container.querySelector('div[style*="text-align: center"]')) container.innerHTML = '';
+            container.innerHTML += `<div style="text-align: right; margin-bottom: 15px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 20px; border-radius: 20px; max-width: 70%;">${msg}</div>
+            </div>`;
+            container.innerHTML += `<div style="margin-bottom: 15px;">
+                <div style="display: inline-block; background: white; padding: 12px 20px; border-radius: 20px;">💭 Thinking...</div>
+            </div>`;
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const res = await fetch("http://localhost:3000/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: msg, username: currentUser.username })
+                });
+
+                const data = await res.json();
+                const reply = data.reply || "Sorry, I couldn't understand that.";
+
+                const msgs = container.querySelectorAll('div');
+                msgs[msgs.length - 1].remove();
+                container.innerHTML += `<div style="margin-bottom: 15px;">
+                    <div style="display: inline-block; background: white; padding: 12px 20px; border-radius: 20px; max-width: 70%;">${reply}</div>
+                </div>`;
+                container.scrollTop = container.scrollHeight;
+
+            } catch (e) {
+                const msgs = container.querySelectorAll('div');
+                msgs[msgs.length - 1].remove();
+                container.innerHTML += `<div style="margin-bottom: 15px;">
+                    <div style="display: inline-block; background: #ffebee; color: #c62828; padding: 12px 20px; border-radius: 20px; max-width: 70%;">Server error. Make sure server is running on localhost:3000 💜</div>
+                </div>`;
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        async function loadChatHistory() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`http://localhost:3000/get-chats/${currentUser.username}`);
+                const chats = await res.json();
+                
+                const container = document.getElementById('chatMessages');
+                if (chats.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">🌸</div>
+                        <h3 style="color: #667eea;">Hi! I'm Sucoi</h3>
+                        <p style="color: #666;">I'm here for you! 💜</p>
+                    </div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                chats.forEach(chat => {
+                    container.innerHTML += `<div style="text-align: right; margin-bottom: 15px; position: relative; group">
+                        <button onclick="deleteChat('${chat._id}')" style="position: absolute; right: 0; top: -5px; width: auto; padding: 5px 10px; background: #ff6b6b; color: white; font-size: 12px; border-radius: 10px; opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">Delete</button>
+                        <div style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 20px; border-radius: 20px; max-width: 70%; margin-top: 20px;">${chat.userMessage}</div>
+                    </div>`;
+                    container.innerHTML += `<div style="margin-bottom: 15px;">
+                        <div style="display: inline-block; background: white; padding: 12px 20px; border-radius: 20px; max-width: 70%;">${chat.botReply}</div>
+                    </div>`;
+                });
+                container.scrollTop = container.scrollHeight;
+            } catch (e) {
+                console.error('Error loading chat history:', e);
+            }
+        }
+
+        async function deleteChat(chatId) {
+            if (!confirm('Are you sure you want to delete this chat?')) return;
+            
+            try {
+                await fetch('http://localhost:3000/delete-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chatId })
+                });
+                await loadChatHistory();
+            } catch (e) {
+                console.error('Error deleting chat:', e);
+                alert('Failed to delete chat. Please try again.');
+            }
+        }
+
+        function trackMood(mood, icon, label) {
+            const response = moodMessages[mood];
+            const randomMsg = response.messages[Math.floor(Math.random() * response.messages.length)];
+            document.getElementById('moodPopupIcon').textContent = response.icon;
+            document.getElementById('moodPopupTitle').textContent = response.title;
+            document.getElementById('moodPopupMessage').textContent = randomMsg;
+            document.getElementById('moodPopup').classList.add('active');
+            moods.unshift({mood: label, icon, time: new Date().toLocaleString()});
+            updateMoodHistory();
+        }
+
+        function closeMoodPopup() {
+            document.getElementById('moodPopup').classList.remove('active');
+        }
+
+        function updateMoodHistory() {
+            const container = document.getElementById('moodHistory');
+            if (moods.length === 0) {
+                container.innerHTML = '<h3 style="color: #667eea; text-align: center; margin-bottom: 20px;">📊 Recent Moods</h3><p style="text-align: center; color: #999;">No moods tracked yet!</p>';
+                return;
+            }
+            container.innerHTML = '<h3 style="color: #667eea; text-align: center; margin-bottom: 20px;">📊 Recent Moods</h3>';
+            moods.slice(0, 5).forEach(m => {
+                container.innerHTML += `<div style="background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; gap: 15px; align-items: center;"><div style="font-size: 30px;">${m.icon}</div><div style="flex: 1;"><div style="font-weight: 600; color: #333;">Feeling ${m.mood}</div><div style="font-size: 13px; color: #999;">${m.time}</div></div></div>`;
+            });
+        }
+
+        function initializeDays() {
+            const container = document.getElementById('daysList');
+            container.innerHTML = days.map(day => `
+                <div class="day-card">
+                    <div class="day-header">
+                        <span class="day-name">${day}</span>
+                        <span style="font-size: 12px; padding: 5px 12px; background: #667eea; color: white; border-radius: 15px;" id="${day}-count">0 tasks</span>
+                    </div>
+                    <div id="${day}-tasks"></div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="${day}-input" placeholder="Add task..." style="margin: 0;" onkeypress="if(event.key==='Enter') addTask('${day}')">
+                        <button onclick="addTask('${day}')" style="width: auto; padding: 10px 20px;">+ Add</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function addTask(day) {
+            const input = document.getElementById(`${day}-input`);
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const newTask = {text, done: false, id: Date.now()};
+            tasks[day].push(newTask);
+            input.value = '';
+            renderDay(day);
+            updateProgress();
+
+            // Save to database
+            try {
+                await fetch('http://localhost:3000/add-goal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser.username,
+                        goal: JSON.stringify({day, task: newTask})
+                    })
+                });
+            } catch (e) {
+                console.error('Error saving goal:', e);
+            }
+        }
+
+        async function loadGoals() {
+            if (!currentUser) {
+                console.log('❌ No current user');
+                alert('Please login first!');
+                return;
+            }
+            
+            console.log('🔄 Loading goals for user:', currentUser.username);
+            
+            try {
+                const res = await fetch(`http://localhost:3000/get-goals/${currentUser.username}`);
+                
+                console.log('Response status:', res.status);
+                
+                if (!res.ok) {
+                    throw new Error('Failed to fetch goals');
+                }
+                
+                const goals = await res.json();
+                console.log('📦 Received goals from server:', goals);
+                
+                // Reset tasks completely
+                tasks = {Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []};
+                
+                // Load goals from database
+                goals.forEach(g => {
+                    try {
+                        const parsed = JSON.parse(g.goal);
+                        console.log('Parsed goal:', parsed);
+                        if (parsed.day && parsed.task && tasks[parsed.day]) {
+                            tasks[parsed.day].push(parsed.task);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing goal:', e);
+                    }
+                });
+
+                console.log('📋 Final tasks object:', tasks);
+
+                // Render all days
+                days.forEach(day => renderDay(day));
+                updateProgress();
+                
+                console.log('✅ Goals loaded and rendered successfully');
+            } catch (e) {
+                console.error('❌ Error loading goals:', e);
+                alert('Error loading goals: ' + e.message + '\nCheck console for details.');
+            }
+        }
+
+        function renderDay(day) {
+            const container = document.getElementById(`${day}-tasks`);
+            const dayTasks = tasks[day];
+            if (dayTasks.length === 0) {
+                container.innerHTML = '';
+            } else {
+                container.innerHTML = dayTasks.map(task => `
+                    <div class="task-item">
+                        <input type="checkbox" class="task-checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask('${day}', ${task.id})">
+                        <span class="task-text ${task.done ? 'completed' : ''}">${task.text}</span>
+                        <button class="task-delete" onclick="deleteTask('${day}', ${task.id})">×</button>
+                    </div>
+                `).join('');
+            }
+            const completed = dayTasks.filter(t => t.done).length;
+            document.getElementById(`${day}-count`).textContent = `${completed}/${dayTasks.length} done`;
+        }
+
+        async function toggleTask(day, taskId) {
+            const task = tasks[day].find(t => t.id === taskId);
+            if (task) {
+                task.done = !task.done;
+                renderDay(day);
+                updateProgress();
+                
+                // Save updated task to database
+                try {
+                    await fetch('http://localhost:3000/update-goal', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: currentUser.username,
+                            goal: JSON.stringify({day, task})
+                        })
+                    });
+                } catch (e) {
+                    console.error('Error updating goal:', e);
+                }
+            }
+        }
+
+        async function deleteTask(day, taskId) {
+            tasks[day] = tasks[day].filter(t => t.id !== taskId);
+            renderDay(day);
+            updateProgress();
+            
+            // Delete from database
+            try {
+                await fetch('http://localhost:3000/delete-goal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser.username,
+                        taskId: taskId
+                    })
+                });
+            } catch (e) {
+                console.error('Error deleting goal:', e);
+            }
+        }
+
+        function updateProgress() {
+            let total = 0;
+            let completed = 0;
+            days.forEach(day => {
+                total += tasks[day].length;
+                completed += tasks[day].filter(t => t.done).length;
+            });
+            const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+            document.getElementById('goalProgress').textContent = percentage + '%';
+            document.getElementById('goalProgressBar').style.width = percentage + '%';
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('totalCount').textContent = total;
+            const tree = document.getElementById('treeDisplay');
+            let message;
+            if (percentage === 0) {
+                tree.style.filter = 'grayscale(0.7) brightness(0.7)';
+                tree.style.transform = 'scale(1)';
+                message = 'Add tasks to start growing your tree! 🌱';
+            } else if (percentage < 40) {
+                tree.style.filter = 'grayscale(0.5) brightness(0.85)';
+                tree.style.transform = 'scale(1.05)';
+                message = 'Keep growing! Your tree is starting to flourish! 🌿';
+            } else if (percentage < 75) {
+                tree.style.filter = 'grayscale(0.3) brightness(1)';
+                tree.style.transform = 'scale(1.1)';
+                message = 'Almost there! Your tree is getting stronger! 🌲';
+            } else {
+                tree.style.filter = 'grayscale(0) brightness(1.4) drop-shadow(0 0 40px rgba(86, 171, 47, 0.8))';
+                tree.style.transform = 'scale(1.15)';
+                tree.style.animation = 'pulse 2s infinite';
+                message = 'Incredible! Your tree is thriving with positive energy! ✨🌳';
+            }
+            document.getElementById('treeMessage').textContent = message;
+        }
+    </script>
+</body>
+</html>
