@@ -102,19 +102,23 @@ app.post("/signin", async (req, res) => {
   }
 });
 
-// Verify security question
+// Verify security question - UPDATED
 app.post("/verify-security", async (req, res) => {
   try {
     const { email } = req.body;
     
+    console.log("🔍 Verifying security question for:", email);
+    
     const user = await User.findOne({ email });
     
     if (user) {
+      console.log("✅ User found, sending security question");
       res.json({ 
         success: true, 
         securityQuestion: user.securityQuestion 
       });
     } else {
+      console.log("❌ User not found");
       res.status(404).json({ error: "User not found!" });
     }
   } catch (err) {
@@ -123,23 +127,33 @@ app.post("/verify-security", async (req, res) => {
   }
 });
 
-// Reset password
+// Reset password - UPDATED
 app.post("/reset-password", async (req, res) => {
   try {
     const { email, securityAnswer, newPassword } = req.body;
     
+    console.log("🔐 Resetting password for:", email);
+    
     const user = await User.findOne({ email });
     
     if (!user) {
+      console.log("❌ User not found");
       return res.status(404).json({ error: "User not found!" });
     }
     
     // Compare security answers (case-insensitive)
-    if (user.securityAnswer === securityAnswer.toLowerCase().trim()) {
+    const userAnswer = user.securityAnswer.toLowerCase().trim();
+    const providedAnswer = securityAnswer.toLowerCase().trim();
+    
+    console.log("Comparing answers - Stored:", userAnswer, "Provided:", providedAnswer);
+    
+    if (userAnswer === providedAnswer) {
       user.password = newPassword;
       await user.save();
+      console.log("✅ Password reset successful");
       res.json({ success: true, message: "Password reset successfully!" });
     } else {
+      console.log("❌ Incorrect security answer");
       res.status(401).json({ error: "Incorrect security answer!" });
     }
   } catch (err) {
