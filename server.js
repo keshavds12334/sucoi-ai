@@ -18,13 +18,12 @@ const __dirname = path.dirname(__filename);
 const API_KEY = process.env.API_KEY;
 const MONGO_URI = process.env.MONGO_URI;
 
-// ✅ Connect to MongoDB
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.error("❌ MongoDB connection failed:", err));
 
-// ======================== SCHEMAS ========================
+// Updated Goal Schema - prevents duplicates
 const goalSchema = new mongoose.Schema({
   username: String,
   day: String,
@@ -43,6 +42,7 @@ const chatSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Add User Schema
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
@@ -54,17 +54,21 @@ const Goal = mongoose.model("Goal", goalSchema);
 const Chat = mongoose.model("Chat", chatSchema);
 const User = mongoose.model("User", userSchema);
 
-// ======================== AUTH ENDPOINTS ========================
-
-// Signup
+// User signup
 app.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: "User already exists!" });
-
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists!" });
+    }
+    
+    // Create new user
     const newUser = new User({ name, email, password });
     await newUser.save();
+    
     res.json({ success: true, message: "User created successfully!" });
   } catch (err) {
     console.error("❌ Error signing up:", err);
@@ -72,11 +76,13 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Signin
+// User signin
 app.post("/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
+    
     const user = await User.findOne({ email, password });
+    
     if (user) {
       res.json({ success: true, user: { name: user.name, email: user.email } });
     } else {
@@ -88,9 +94,11 @@ app.post("/signin", async (req, res) => {
   }
 });
 
-// ======================== CHAT ENDPOINT ========================
+// Chat endpoint
 app.post("/chat", async (req, res) => {
   const { message: userMsg, username } = req.body;
+  console.log("📩 Received:", userMsg);
+
   if (!userMsg) return res.json({ reply: "Please type something first." });
 
   try {
@@ -131,7 +139,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// ======================== GOAL ENDPOINTS ========================
+// Add or update goal (prevents duplicates)
 app.post("/add-goal", async (req, res) => {
   try {
     const { username, goal } = req.body;
@@ -157,16 +165,23 @@ app.post("/add-goal", async (req, res) => {
   }
 });
 
+// Get user goals (automatically called when visiting Goals page)
 app.get("/get-goals/:username", async (req, res) => {
   try {
     const goals = await Goal.find({ username: req.params.username }).sort({ createdAt: 1 });
-    const formattedGoals = goals.map((g) => ({
+    
+    const formattedGoals = goals.map(g => ({
       _id: g._id,
       goal: JSON.stringify({
         day: g.day,
-        task: { id: g.taskId, text: g.taskText, done: g.taskDone },
-      }),
+        task: {
+          id: g.taskId,
+          text: g.taskText,
+          done: g.taskDone
+        }
+      })
     }));
+    
     res.json(formattedGoals);
   } catch (err) {
     console.error("❌ Error fetching goals:", err);
@@ -174,6 +189,7 @@ app.get("/get-goals/:username", async (req, res) => {
   }
 });
 
+// Update goal (for toggling completion)
 app.post("/update-goal", async (req, res) => {
   try {
     const { username, goal } = req.body;
@@ -182,31 +198,47 @@ app.post("/update-goal", async (req, res) => {
 
     const result = await Goal.findOneAndUpdate(
       { username, taskId: task.id },
-      { day, taskText: task.text, taskDone: task.done },
+      {
+        day,
+        taskText: task.text,
+        taskDone: task.done,
+      },
       { new: true }
     );
 
-    if (result) res.json({ success: true });
-    else res.status(404).json({ error: "Goal not found" });
+    if (result) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "Goal not found" });
+    }
   } catch (err) {
     console.error("❌ Error updating goal:", err);
     res.status(500).json({ error: "Failed to update goal" });
   }
 });
 
+// Delete goal
 app.post("/delete-goal", async (req, res) => {
   try {
     const { username, taskId } = req.body;
-    const result = await Goal.findOneAndDelete({ username, taskId });
-    if (result) res.json({ success: true });
-    else res.status(404).json({ error: "Goal not found" });
+
+    const result = await Goal.findOneAndDelete({
+      username,
+      taskId,
+    });
+
+    if (result) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "Goal not found" });
+    }
   } catch (err) {
     console.error("❌ Error deleting goal:", err);
     res.status(500).json({ error: "Failed to delete goal" });
   }
 });
 
-// ======================== CHAT HISTORY ENDPOINTS ========================
+// Get chat history
 app.get("/get-chats/:username", async (req, res) => {
   try {
     const chats = await Chat.find({ username: req.params.username }).sort({ createdAt: 1 });
@@ -217,27 +249,30 @@ app.get("/get-chats/:username", async (req, res) => {
   }
 });
 
+// Delete chat
 app.post("/delete-chat", async (req, res) => {
   try {
     const { chatId } = req.body;
+    
     const result = await Chat.findByIdAndDelete(chatId);
-    if (result) res.json({ success: true });
-    else res.status(404).json({ error: "Chat not found" });
+    
+    if (result) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "Chat not found" });
+    }
   } catch (err) {
     console.error("❌ Error deleting chat:", err);
     res.status(500).json({ error: "Failed to delete chat" });
   }
 });
 
-// ======================== FRONTEND SERVE ========================
 app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
   res.sendFile(path.resolve(__dirname, "dashboard.html"));
 });
 
-// ✅ Use dynamic port for Render
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Sucoi Bot running on port ${PORT}`);
-});
+app.listen(3000, () =>
+  console.log("✅ Sucoi Bot running at http://localhost:3000")
+);
