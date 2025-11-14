@@ -42,11 +42,13 @@ const chatSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Add User Schema
+// Add User Schema with security question
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
+  securityQuestion: String,
+  securityAnswer: String,
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -57,7 +59,7 @@ const User = mongoose.model("User", userSchema);
 // User signup
 app.post("/signup", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, securityQuestion, securityAnswer } = req.body;
     
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -66,7 +68,13 @@ app.post("/signup", async (req, res) => {
     }
     
     // Create new user
-    const newUser = new User({ name, email, password });
+    const newUser = new User({ 
+      name, 
+      email, 
+      password,
+      securityQuestion,
+      securityAnswer: securityAnswer.toLowerCase().trim() // Store lowercase for comparison
+    });
     await newUser.save();
     
     res.json({ success: true, message: "User created successfully!" });
@@ -91,6 +99,52 @@ app.post("/signin", async (req, res) => {
   } catch (err) {
     console.error("❌ Error signing in:", err);
     res.status(500).json({ error: "Failed to sign in" });
+  }
+});
+
+// Verify security question
+app.post("/verify-security", async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const user = await User.findOne({ email });
+    
+    if (user) {
+      res.json({ 
+        success: true, 
+        securityQuestion: user.securityQuestion 
+      });
+    } else {
+      res.status(404).json({ error: "User not found!" });
+    }
+  } catch (err) {
+    console.error("❌ Error verifying security:", err);
+    res.status(500).json({ error: "Failed to verify security question" });
+  }
+});
+
+// Reset password
+app.post("/reset-password", async (req, res) => {
+  try {
+    const { email, securityAnswer, newPassword } = req.body;
+    
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found!" });
+    }
+    
+    // Compare security answers (case-insensitive)
+    if (user.securityAnswer === securityAnswer.toLowerCase().trim()) {
+      user.password = newPassword;
+      await user.save();
+      res.json({ success: true, message: "Password reset successfully!" });
+    } else {
+      res.status(401).json({ error: "Incorrect security answer!" });
+    }
+  } catch (err) {
+    console.error("❌ Error resetting password:", err);
+    res.status(500).json({ error: "Failed to reset password" });
   }
 });
 
@@ -165,7 +219,7 @@ app.post("/add-goal", async (req, res) => {
   }
 });
 
-// Get user goals (automatically called when visiting Goals page)
+// Get user goals
 app.get("/get-goals/:username", async (req, res) => {
   try {
     const goals = await Goal.find({ username: req.params.username }).sort({ createdAt: 1 });
@@ -189,7 +243,7 @@ app.get("/get-goals/:username", async (req, res) => {
   }
 });
 
-// Update goal (for toggling completion)
+// Update goal
 app.post("/update-goal", async (req, res) => {
   try {
     const { username, goal } = req.body;

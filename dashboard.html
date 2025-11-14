@@ -166,6 +166,7 @@
             transition: all 0.3s ease;
             font-weight: 600;
             color: #666;
+            font-size: 13px;
         }
 
         .tab.active {
@@ -185,7 +186,7 @@
             font-size: 14px;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 14px 18px;
             border: 2px solid #e0e0e0;
@@ -195,7 +196,7 @@
             outline: none;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: #667eea;
         }
 
@@ -394,6 +395,14 @@
             width: auto;
         }
 
+        .reset-step {
+            display: none;
+        }
+
+        .reset-step.active {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .navbar {
                 flex-direction: column;
@@ -432,8 +441,10 @@
                 <div class="tabs">
                     <div class="tab active" onclick="switchAuthTab('signup')">Sign Up</div>
                     <div class="tab" onclick="switchAuthTab('signin')">Sign In</div>
-                    <div class="tab" onclick="switchAuthTab('reset')">Forgot Password</div>
+                    <div class="tab" onclick="switchAuthTab('reset')">Reset</div>
                 </div>
+                
+                <!-- SIGN UP FORM -->
                 <div id="signupForm" class="form-content active">
                     <div class="form-group">
                         <label>Your Name</label>
@@ -447,8 +458,25 @@
                         <label>Password</label>
                         <input type="password" id="signupPassword" placeholder="Create a password">
                     </div>
+                    <div class="form-group">
+                        <label>Security Question</label>
+                        <select id="signupSecurityQuestion">
+                            <option value="">Choose a question...</option>
+                            <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                            <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+                            <option value="What city were you born in?">What city were you born in?</option>
+                            <option value="What is your favorite food?">What is your favorite food?</option>
+                            <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Security Answer</label>
+                        <input type="text" id="signupSecurityAnswer" placeholder="Your answer">
+                    </div>
                     <button onclick="handleSignup()">Create Account ✨</button>
                 </div>
+                
+                <!-- SIGN IN FORM -->
                 <div id="signinForm" class="form-content">
                     <div class="form-group">
                         <label>Email</label>
@@ -459,6 +487,41 @@
                         <input type="password" id="signinPassword" placeholder="Enter your password">
                     </div>
                     <button onclick="handleSignin()">Sign In 🚀</button>
+                </div>
+                
+                <!-- PASSWORD RESET FORM -->
+                <div id="resetForm" class="form-content">
+                    <!-- Step 1: Enter Email -->
+                    <div id="resetStep1" class="reset-step active">
+                        <div class="form-group">
+                            <label>Enter your email</label>
+                            <input type="email" id="resetEmail" placeholder="your@email.com">
+                        </div>
+                        <button onclick="verifyEmail()">Continue 🔐</button>
+                    </div>
+                    
+                    <!-- Step 2: Answer Security Question -->
+                    <div id="resetStep2" class="reset-step">
+                        <div class="form-group">
+                            <label id="resetSecurityQuestion">Security Question</label>
+                            <input type="text" id="resetSecurityAnswer" placeholder="Your answer">
+                        </div>
+                        <button onclick="verifySecurityAnswer()">Verify ✓</button>
+                        <button onclick="backToStep1()" style="margin-top: 10px; background: white; color: #667eea; border: 2px solid #667eea;">← Back</button>
+                    </div>
+                    
+                    <!-- Step 3: Set New Password -->
+                    <div id="resetStep3" class="reset-step">
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="resetNewPassword" placeholder="Enter new password">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="resetConfirmPassword" placeholder="Confirm new password">
+                        </div>
+                        <button onclick="resetPassword()">Reset Password 🔑</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -591,13 +654,12 @@
     </div>
 
     <script>
-        // ✅ Detect API URL based on environment
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3000' 
             : window.location.origin;
 
         let currentUser = null;
-        let users = [];
+        let resetEmail = '';
         let moods = [];
         let tasks = {Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []};
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -610,12 +672,17 @@
         function switchAuthTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.form-content').forEach(f => f.classList.remove('active'));
+            
             if (tab === 'signup') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('signupForm').classList.add('active');
-            } else {
+            } else if (tab === 'signin') {
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('signinForm').classList.add('active');
+            } else if (tab === 'reset') {
+                document.querySelectorAll('.tab')[2].classList.add('active');
+                document.getElementById('resetForm').classList.add('active');
+                backToStep1(); // Reset to step 1 when switching to reset tab
             }
         }
 
@@ -623,26 +690,22 @@
             const name = document.getElementById('signupName').value.trim();
             const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value.trim();
+            const securityQuestion = document.getElementById('signupSecurityQuestion').value;
+            const securityAnswer = document.getElementById('signupSecurityAnswer').value.trim();
             
-            if (!name || !email || !password) {
+            if (!name || !email || !password || !securityQuestion || !securityAnswer) {
                 alert('Please fill all fields!');
                 return;
             }
 
-            console.log('🔄 Attempting signup with:', { name, email });
-
             try {
-                console.log('📡 Sending request to:', `${API_URL}/signup`);
-                
                 const res = await fetch(`${API_URL}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ name, email, password, securityQuestion, securityAnswer })
                 });
 
-                console.log('📥 Response status:', res.status);
                 const data = await res.json();
-                console.log('📦 Response data:', data);
 
                 if (res.ok) {
                     currentUser = { name, username: email, email };
@@ -654,7 +717,7 @@
                 }
             } catch (e) {
                 console.error('❌ Signup error:', e);
-                alert('Error connecting to server: ' + e.message + '\n\nPlease check:\n1. Server is running (node server.js)\n2. Server shows "✅ Sucoi Bot running at http://localhost:3000"');
+                alert('Error connecting to server: ' + e.message);
             }
         }
 
@@ -687,6 +750,103 @@
             } catch (e) {
                 console.error('Signin error:', e);
                 alert('Error connecting to server. Please make sure the server is running.');
+            }
+        }
+
+        // PASSWORD RESET FUNCTIONS
+        function backToStep1() {
+            document.querySelectorAll('.reset-step').forEach(step => step.classList.remove('active'));
+            document.getElementById('resetStep1').classList.add('active');
+            document.getElementById('resetEmail').value = '';
+            resetEmail = '';
+        }
+
+        async function verifyEmail() {
+            const email = document.getElementById('resetEmail').value.trim();
+            
+            if (!email) {
+                alert('Please enter your email!');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/verify-security`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    resetEmail = email;
+                    document.getElementById('resetSecurityQuestion').textContent = data.securityQuestion;
+                    document.querySelectorAll('.reset-step').forEach(step => step.classList.remove('active'));
+                    document.getElementById('resetStep2').classList.add('active');
+                } else {
+                    alert(data.error || 'User not found!');
+                }
+            } catch (e) {
+                console.error('Error verifying email:', e);
+                alert('Error connecting to server.');
+            }
+        }
+
+        function verifySecurityAnswer() {
+            const answer = document.getElementById('resetSecurityAnswer').value.trim();
+            
+            if (!answer) {
+                alert('Please enter your security answer!');
+                return;
+            }
+
+            // Move to step 3 - we'll verify the answer when they submit the new password
+            document.querySelectorAll('.reset-step').forEach(step => step.classList.remove('active'));
+            document.getElementById('resetStep3').classList.add('active');
+        }
+
+        async function resetPassword() {
+            const newPassword = document.getElementById('resetNewPassword').value.trim();
+            const confirmPassword = document.getElementById('resetConfirmPassword').value.trim();
+            const securityAnswer = document.getElementById('resetSecurityAnswer').value.trim();
+            
+            if (!newPassword || !confirmPassword) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: resetEmail, 
+                        securityAnswer,
+                        newPassword 
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert('✅ Password reset successfully! You can now sign in with your new password.');
+                    switchAuthTab('signin');
+                    document.getElementById('resetEmail').value = '';
+                    document.getElementById('resetSecurityAnswer').value = '';
+                    document.getElementById('resetNewPassword').value = '';
+                    document.getElementById('resetConfirmPassword').value = '';
+                    backToStep1();
+                } else {
+                    alert(data.error || 'Failed to reset password!');
+                }
+            } catch (e) {
+                console.error('Error resetting password:', e);
+                alert('Error connecting to server.');
             }
         }
 
@@ -876,7 +1036,6 @@
             renderDay(day);
             updateProgress();
 
-            // Save to database
             try {
                 await fetch(`${API_URL}/add-goal`, {
                     method: 'POST',
@@ -898,28 +1057,20 @@
                 return;
             }
             
-            console.log('🔄 Loading goals for user:', currentUser.username);
-            
             try {
                 const res = await fetch(`${API_URL}/get-goals/${currentUser.username}`);
-                
-                console.log('Response status:', res.status);
                 
                 if (!res.ok) {
                     throw new Error('Failed to fetch goals');
                 }
                 
                 const goals = await res.json();
-                console.log('📦 Received goals from server:', goals);
                 
-                // Reset tasks completely
                 tasks = {Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []};
                 
-                // Load goals from database
                 goals.forEach(g => {
                     try {
                         const parsed = JSON.parse(g.goal);
-                        console.log('Parsed goal:', parsed);
                         if (parsed.day && parsed.task && tasks[parsed.day]) {
                             tasks[parsed.day].push(parsed.task);
                         }
@@ -928,16 +1079,11 @@
                     }
                 });
 
-                console.log('📋 Final tasks object:', tasks);
-
-                // Render all days
                 days.forEach(day => renderDay(day));
                 updateProgress();
-                
-                console.log('✅ Goals loaded and rendered successfully');
             } catch (e) {
                 console.error('❌ Error loading goals:', e);
-                alert('Error loading goals: ' + e.message + '\nCheck console for details.');
+                alert('Error loading goals: ' + e.message);
             }
         }
 
@@ -966,7 +1112,6 @@
                 renderDay(day);
                 updateProgress();
                 
-                // Save updated task to database
                 try {
                     await fetch(`${API_URL}/update-goal`, {
                         method: 'POST',
@@ -987,7 +1132,6 @@
             renderDay(day);
             updateProgress();
             
-            // Delete from database
             try {
                 await fetch(`${API_URL}/delete-goal`, {
                     method: 'POST',
